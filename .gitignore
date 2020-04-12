@@ -3,3 +3,5 @@ database/prom/**
 database/grafana/**
 database/logs/**
 !database/**/dummy
+nginx/certs/*
+!nginx/certs/dummy
