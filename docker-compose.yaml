@@ -1,0 +1,106 @@
+version: "3.3"
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.17
+    restart: always
+    environment: 
+      COLLECTOR_ZIPKIN_HTTP_PORT: 9411
+    # ports:
+    # - "5775:5775/udp"
+    # - "6831:6831/udp"
+    # - "6832:6832/udp"
+    # - "5778:5778"
+    # - "16686:16686"
+    # - "14268:14268"
+    # - "14250:14250"
+    # - "9411:9411"
+  mongo:
+    image: mongo:4.2
+    restart: always
+    # ports:
+    # - "27017:27017"
+    volumes:
+      - "${BASE:-.}/database/mongo:/data/db"
+  prom:
+    image: prom/prometheus
+    restart: always 
+    user: '1000'
+    volumes:
+      - ${BASE:-.}/prom/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ${BASE:-.}/database/prom/:/prometheus/
+    # ports:
+    #   - "9000:9000"
+  grafana:
+    image: grafana/grafana 
+    restart: always
+    # ports:
+    #   - "3000:3000"
+    volumes:
+      - ${BASE:-.}/database/grafana/data:/var/lib/grafana
+    depends_on:
+      - prom
+  
+  cvbackend:
+    image: brainoom/cvmonitor:v0.3.18
+    restart: always
+    # ports:
+    #   - "8088:8088"
+    environment:
+      CVMONITOR_SUGGEST_SEGMENT: ${CVMONITOR_SUGGEST_SEGMENT:-FALSE}
+      CVMONITOR_SPOTTING_PROB_THRESHOLD: ${CVMONITOR_SPOTTING_PROB_THRESHOLD:-0.3}
+      CVMONITOR_DEVICE_OCR_DEFAULT_SCORE: ${CVMONITOR_DEVICE_OCR_DEFAULT_SCORE:-0.5}
+      CVMONITOR_DEVICE_OCR_SCORE_THRESHOLD: ${CVMONITOR_DEVICE_OCR_SCORE_THRESHOLD:-0.8}
+      CVMONITOR_SERVER_OCR_THRESHOLD: ${CVMONITOR_SERVER_OCR_THRESHOLD:-0.8}
+      CVMONITOR_SPOTTING_MAX_SEQ_LEN: ${CVMONITOR_SPOTTING_MAX_SEQ_LEN:-10}
+      CVMONITOR_SPOTTING_IOU_THRESHOLD: ${CVMONITOR_SPOTTING_IOU_THRESHOLD:-0.01}
+      CVMONITOR_SPOTTING_MODEL_TYPE: ${CVMONITOR_SPOTTING_MODEL_TYPE:-FP32}
+      CVMONITOR_ORIENT_BY_EXIF: ${CVMONITOR_ORIENT_BY_EXIF:-TRUE}
+      CVMONITOR_ORIENT_BY_QR: ${CVMONITOR_ORIENT_BY_QR:-FALSE}
+      CVMONITOR_QR_PREFIX: ${CVMONITOR_QR_PREFIX:-cvmonitor}
+      CVMONITOR_QR_TARGET_SIZE: ${CVMONITOR_QR_TARGET_SIZE:-100}
+      CVMONITOR_QR_BOUNDERY_SIZE: ${CVMONITOR_QR_BOUNDERY_SIZE:-50}
+      CVMONITOR_SKIP_ALIGN: ${CVMONITOR_SKIP_ALIGN:-TRUE}
+      CVMONITOR_SAVE_BEFORE_ALIGN: ${CVMONITOR_SAVE_BEFORE_ALIGN:-FALSE}
+      CVMONITOR_SAVE_AFTER_ALIGN: ${CVMONITOR_SAVE_AFTER_ALIGN:-FALSE}
+      CVMONITOR_SEGMENT_THRESHOLD: ${CVMONITOR_SEGMENT_THRESHOLD:-0.95}
+      CVMONITOR_OCR_SPOTTING: ${CVMONITOR_OCR_SPOTTING:-TRUE}
+      CVMONITOR_QR_PDF_ROWS: ${CVMONITOR_QR_PDF_ROWS:-6}
+      CVMONITOR_QR_PDF_COLS: ${CVMONITOR_QR_PDF_COLS:-4}
+      CVMONITOR_LOG_LEVEL: ${CVMONITOR_LOG_LEVEL:-DEBUG}
+      CVMONITOR_HOST: ${CVMONITOR_HOST:-0.0.0.0}
+      CVMONITOR_PORT: ${CVMONITOR_PORT:-8088}
+      CVMONITOR_THRESHOLD_CHARACTER: ${CVMONITOR_THRESHOLD_CHARACTER:-0.95}
+    volumes:
+      - "${BASE:-.}/database/logs:/opt/app/logs"
+    depends_on: 
+      - jaeger
+  backend:
+    image: yehiyam/monitor-backend:v0.0.24
+    restart: always
+    # ports:
+    #   - "3001:3000"
+    environment:
+      CVMONITOR_HOST: cvbackend
+      DB_CONNECTION: mongodb://mongo/test
+    depends_on:
+      - cvbackend
+      - prom
+      - mongo
+      - grafana
+      - jaeger
+  frontend:
+      image: registry.gitlab.com/or2511/covid-frontend:version-1-0-7
+      restart: always
+      # ports:
+      #   - "4200:4200"
+      depends_on: 
+        - backend
+  nginx:
+      image: nginx
+      restart: always
+      ports:
+        - "6443:443"
+        - "8000:80"
+      volumes:
+      - ${BASE:-.}/nginx/conf/reverse.conf:/etc/nginx/conf.d/default.conf
+      - ${BASE:-.}/nginx/certs:/etc/ssl/private

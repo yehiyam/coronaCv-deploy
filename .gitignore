@@ -1,0 +1,5 @@
+database/mongo/**
+database/prom/data/**
+database/grafana/**
+database/logs/**
+!database/**/dummy
