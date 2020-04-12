@@ -36,7 +36,7 @@ services:
     # ports:
     #   - "3000:3000"
     volumes:
-      - ${BASE:-.}/database/grafana/data:/var/lib/grafana
+      - ${BASE:-.}/database/grafana:/var/lib/grafana
     depends_on:
       - prom
   

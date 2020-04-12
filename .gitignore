@@ -1,5 +1,5 @@
 database/mongo/**
-database/prom/data/**
+database/prom/**
 database/grafana/**
 database/logs/**
 !database/**/dummy
