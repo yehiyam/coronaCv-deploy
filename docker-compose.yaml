@@ -1,4 +1,12 @@
 version: "3.3"
+
+volumes:
+  mongo-db:
+  grafana-storage:
+  prom-data:
+  logs:
+  prom-db:
+
 services:
   jaeger:
     image: jaegertracing/all-in-one:1.17
@@ -10,44 +18,52 @@ services:
     # - "6831:6831/udp"
     # - "6832:6832/udp"
     # - "5778:5778"
-    # - "16686:16686"
     # - "14268:14268"
     # - "14250:14250"
     # - "9411:9411"
+    # expose:
+    #   - 16686
   mongo:
     image: mongo:4.2
     restart: always
-    # ports:
-    # - "27017:27017"
+    ports:
+    - "27017:27017"
     volumes:
-      - "${BASE:-.}/database/mongo:/data/db"
+      - "mongo-db:/data/db"
   prom:
     image: prom/prometheus
     restart: always 
-    user: '1000'
+    user: '0'
     volumes:
-      - ${BASE:-.}/prom/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ${BASE:-.}/database/prom/:/prometheus/
-    # ports:
-    #   - "9000:9000"
+      - ${PWD}/prom/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - "prom-db:/prometheus/"
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mongo
   grafana:
     image: grafana/grafana 
     restart: always
-    # ports:
-    #   - "3000:3000"
+    ports:
+      - "3000:3000"
     volumes:
-      - ${BASE:-.}/database/grafana:/var/lib/grafana
+      - grafana-storage:/var/lib/grafana/
     depends_on:
       - prom
-  
+      - mongo
+    expose:
+      - 3000
   cvbackend:
     image: brainoom/cvmonitor:v0.3.19
     restart: always
     # ports:
     #   - "8088:8088"
+    # expose:
+    #   - 8088
     environment:
       CVMONITOR_SUGGEST_SEGMENT: ${CVMONITOR_SUGGEST_SEGMENT:-FALSE}
       CVMONITOR_SPOTTING_PROB_THRESHOLD: ${CVMONITOR_SPOTTING_PROB_THRESHOLD:-0.3}
+      CVMONITOR_SEGMENT_THRESHOLD: ${CVMONITOR_SEGMENT_THRESHOLD:-0.95}
       CVMONITOR_DEVICE_OCR_DEFAULT_SCORE: ${CVMONITOR_DEVICE_OCR_DEFAULT_SCORE:-0.5}
       CVMONITOR_DEVICE_OCR_SCORE_THRESHOLD: ${CVMONITOR_DEVICE_OCR_SCORE_THRESHOLD:-0.8}
       CVMONITOR_SERVER_OCR_THRESHOLD: ${CVMONITOR_SERVER_OCR_THRESHOLD:-0.8}
@@ -73,38 +89,42 @@ services:
     volumes:
       - "${BASE:-.}/database/logs:/opt/app/logs"
     depends_on: 
-      - jaeger
+       - jaeger
+    volumes:
+      - "logs:/opt/app/logs"
   backend:
     image: yehiyam/monitor-backend:v0.0.26
     restart: always
     # ports:
-    #   - "3001:3000"
+    #   - "80:3000"
+    # expose:
+    #   - 80
     environment:
       CVMONITOR_HOST: cvbackend
       DB_CONNECTION: mongodb://mongo/test
     depends_on:
       - cvbackend
-      - prom
       - mongo
-      - grafana
       - jaeger
   frontend:
       image: registry.gitlab.com/or2511/covid-frontend:version-1-0-7
       restart: always
       ports:
         - "4200:4200"
+      expose:
+        - 4200
       depends_on: 
         - backend
   nginx:
-      image: nginx
-      restart: always
-      ports:
-        - "443:443"
-        - "80:80"
-      volumes:
-      - ${BASE:-.}/nginx/conf/reverse.conf:/etc/nginx/conf.d/default.conf
-      - ${BASE:-.}/nginx/certs:/etc/nginx/ssl
-      depends_on:
-        - backend
-        - frontend
-        - cvbackend
+    image: nginx
+    restart: always
+    ports:
+    #  - "443:443"
+      - "80:80"
+    volumes:
+    - ${PWD}/nginx/conf/reverse.conf:/etc/nginx/conf.d/default.conf
+    #- ${PWD}/nginx/certs:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+      - cvbackend
