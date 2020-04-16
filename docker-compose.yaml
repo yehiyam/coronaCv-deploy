@@ -54,13 +54,14 @@ services:
     expose:
       - 3000
   cvbackend:
-    image: brainoom/cvmonitor:v0.3.21
+    image: brainoom/cvmonitor:v0.3.22
     restart: always
     # ports:
     #   - "8088:8088"
     # expose:
     #   - 8088
     environment:
+      CVMONITOR_AVERAGE_LEN: ${CVMONITOR_AVERAGE_LEN:-1}
       CVMONITOR_SERVER_OCR: ${CVMONITOR_SERVER_OCR:-FALSE}
       CVMONITOR_SUGGEST_SEGMENT: ${CVMONITOR_SUGGEST_SEGMENT:-FALSE}
       CVMONITOR_SPOTTING_PROB_THRESHOLD: ${CVMONITOR_SPOTTING_PROB_THRESHOLD:-0.3}
@@ -91,7 +92,7 @@ services:
     volumes:
       - "logs:/opt/app/logs"
   backend:
-    image: yehiyam/monitor-backend:v0.0.28
+    image: yehiyam/monitor-backend:v0.0.27
     restart: always
     # ports:
     #   - "80:3000"
