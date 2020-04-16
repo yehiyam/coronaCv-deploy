@@ -54,13 +54,14 @@ services:
     expose:
       - 3000
   cvbackend:
-    image: brainoom/cvmonitor:v0.3.19
+    image: brainoom/cvmonitor:v0.3.20
     restart: always
     # ports:
     #   - "8088:8088"
     # expose:
     #   - 8088
     environment:
+      CVMONITOR_SERVER_OCR: ${CVMONITOR_SERVER_OCR:-FALSE}
       CVMONITOR_SUGGEST_SEGMENT: ${CVMONITOR_SUGGEST_SEGMENT:-FALSE}
       CVMONITOR_SPOTTING_PROB_THRESHOLD: ${CVMONITOR_SPOTTING_PROB_THRESHOLD:-0.3}
       CVMONITOR_SEGMENT_THRESHOLD: ${CVMONITOR_SEGMENT_THRESHOLD:-0.95}
@@ -104,7 +105,7 @@ services:
       - mongo
       - jaeger
   frontend:
-      image: registry.gitlab.com/or2511/covid-frontend:version-1-0-7
+      image: registry.gitlab.com/or2511/covid-frontend:version-1-0-8
       restart: always
       ports:
         - "4200:4200"
