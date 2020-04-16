@@ -38,7 +38,7 @@ services:
       - ${PWD}/prom/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - "prom-db:/prometheus/"
     ports:
-      - "9000:9000"
+      - "9090:9090"
     depends_on:
       - mongo
   grafana:
