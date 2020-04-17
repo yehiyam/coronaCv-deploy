@@ -54,7 +54,7 @@ services:
     expose:
       - 3000
   cvbackend:
-    image: brainoom/cvmonitor:v0.3.22
+    image: brainoom/cvmonitor:v0.3.23
     restart: always
     # ports:
     #   - "8088:8088"
@@ -90,7 +90,7 @@ services:
     depends_on: 
        - jaeger
     volumes:
-      - "logs:/opt/app/logs"
+      - "logs:/opt/app/log"
   backend:
     image: yehiyam/monitor-backend:v0.0.27
     restart: always
@@ -106,7 +106,7 @@ services:
       - mongo
       - jaeger
   frontend:
-      image: registry.gitlab.com/or2511/covid-frontend:version-1-0-9
+      image: registry.gitlab.com/or2511/covid-frontend:version-1-0-10
       restart: always
       ports:
         - "4200:4200"
