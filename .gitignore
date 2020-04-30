@@ -5,3 +5,4 @@ database/logs/**
 !database/**/dummy
 nginx/certs/*
 !nginx/certs/dummy
+.env
