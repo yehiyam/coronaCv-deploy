@@ -8,7 +8,7 @@ docker-compose pull
 # set env variables in .env file if needed
 ./scripts/setProperty.sh COVIEW_PORT 8888 .env
 ./scripts/setProperty.sh COVIEW_HOST 127.0.0.1 .env
-./scripts/setProperty.sh COVIEW_ENABLE true .env
+./scripts/setProperty.sh COVIEW_ENABLED true .env
 
 echo 
 # start

@@ -101,6 +101,10 @@ services:
     environment:
       CVMONITOR_HOST: cvbackend
       DB_CONNECTION: mongodb://mongo/test
+      COVIEW_HOST: ${COVIEW_HOST:-"localhost"}
+      COVIEW_PORT: ${COVIEW_PORT:-"8080"}
+      COVIEW_ENABLED: ${COVIEW_ENABLED:="false"}
+      APPLICATIONS_LOCATION: ${APPLICATIONS_LOCATION:="./Applications"}
     depends_on:
       - cvbackend
       - mongo
