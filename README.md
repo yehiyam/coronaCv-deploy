@@ -1,4 +1,7 @@
 # coronaCv deploy
+
+## first time install
+curl -fsSL https://github.com/yehiyam/coronaCv-deploy/blob/master/scripts/deploy.sh 
 ## obtain certificate or create a self signed one
 ```
 cd nginx/certs
